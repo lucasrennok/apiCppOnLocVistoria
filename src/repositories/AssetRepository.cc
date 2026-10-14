@@ -41,7 +41,7 @@ struct Data {
 Data parse(const Json::Value &b) {
   Data d;
   d.patrimonyNumber = common::reqString(b, "patrimonyNumber", 50);
-  d.serialNumber = common::reqString(b, "serialNumber", 100);
+  d.serialNumber = common::optString(b, "serialNumber", 100).value_or("");
   d.description = common::reqString(b, "description", 500);
   d.status = common::oneOf(common::optString(b, "status", 20).value_or("disponivel"), "status",
                            {"disponivel", "emprestado", "avariado"});
@@ -53,7 +53,7 @@ Data parse(const Json::Value &b) {
       Json::Value s;
       s["id"] = common::optString(it, "id", 40).value_or("");
       s["name"] = common::reqString(it, "name");
-      s["patrimonyNumber"] = common::reqString(it, "patrimonyNumber", 50);
+      s["patrimonyNumber"] = common::optString(it, "patrimonyNumber", 50).value_or("");
       d.subItems.append(s);
     }
   }

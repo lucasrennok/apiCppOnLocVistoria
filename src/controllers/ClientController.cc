@@ -1,5 +1,6 @@
 #include <drogon/HttpController.h>
 
+#include "common/Db.h"
 #include "common/Http.h"
 #include "common/Util.h"
 #include "repositories/ClientRepository.h"
@@ -12,6 +13,7 @@ class ClientController : public HttpController<ClientController> {
  public:
   METHOD_LIST_BEGIN
   ADD_METHOD_TO(ClientController::list, "/clients", Get);
+  ADD_METHOD_TO(ClientController::getOne, "/clients/{1}", Get);
   ADD_METHOD_TO(ClientController::create, "/clients", Post);
   ADD_METHOD_TO(ClientController::update, "/clients/{1}", Put);
   ADD_METHOD_TO(ClientController::remove, "/clients/{1}", Delete);
@@ -21,6 +23,14 @@ class ClientController : public HttpController<ClientController> {
   Task<HttpResponsePtr> list(HttpRequestPtr req) {
     API_BEGIN
     co_return common::json(co_await repo::clients::list(req->getParameter("search")));
+    API_END
+  }
+
+  Task<HttpResponsePtr> getOne(HttpRequestPtr, std::string id) {
+    API_BEGIN
+    Json::Value out = co_await repo::clients::find(repo::db(), id);
+    if (out.isNull()) throw ApiError{k404NotFound, "Cliente não encontrado"};
+    co_return common::json(out);
     API_END
   }
 

@@ -24,4 +24,7 @@ cat > /tmp/policy.json <<POLICY
 }
 POLICY
 aws --endpoint-url "$EP" s3api put-bucket-policy --bucket "$S3_BUCKET" --policy file:///tmp/policy.json
+# CORS: o navegador (outra origem) faz PUT direto no bucket (best effort)
+aws --endpoint-url "$EP" s3api put-bucket-cors --bucket "$S3_BUCKET" --cors-configuration '{"CORSRules":[{"AllowedOrigins":["*"],"AllowedMethods":["GET","PUT","HEAD"],"AllowedHeaders":["*"],"ExposeHeaders":["ETag"],"MaxAgeSeconds":3000}]}' \
+  || echo "Aviso: não foi possível configurar CORS no bucket"
 echo "Bucket '$S3_BUCKET' pronto."

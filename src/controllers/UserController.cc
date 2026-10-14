@@ -7,13 +7,13 @@
 using namespace drogon;
 using common::ApiError;
 
-// Todas as rotas exigem Authorization: Bearer <jwt> (AuthFilter)
+// Todas as rotas exigem JWT de um usuário com papel Gestor (GestorFilter)
 class UserController : public HttpController<UserController> {
  public:
   METHOD_LIST_BEGIN
-  ADD_METHOD_TO(UserController::list, "/users", Get, "AuthFilter");
-  ADD_METHOD_TO(UserController::create, "/users", Post, "AuthFilter");
-  ADD_METHOD_TO(UserController::remove, "/users/{1}", Delete, "AuthFilter");
+  ADD_METHOD_TO(UserController::list, "/users", Get, "GestorFilter");
+  ADD_METHOD_TO(UserController::create, "/users", Post, "GestorFilter");
+  ADD_METHOD_TO(UserController::remove, "/users/{1}", Delete, "GestorFilter");
   METHOD_LIST_END
 
   Task<HttpResponsePtr> list(HttpRequestPtr) {
