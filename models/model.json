@@ -1,0 +1,10 @@
+{
+  "rdbms": "mysql",
+  "host": "db",
+  "port": 3306,
+  "dbname": "appdb",
+  "user": "app",
+  "passwd": "TROQUE_PELA_SENHA_DO_.env",
+  "tables": ["users", "clients", "assets", "asset_sub_items", "loans", "loan_items", "damages", "inspections"],
+  "relationships": { "enabled": false }
+}

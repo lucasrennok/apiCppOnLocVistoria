@@ -1,0 +1,36 @@
+# Segredos (nunca versionar: contém JWT_SECRET, senhas do banco e chaves do storage)
+.env
+.env.*
+!.env.example
+
+# Build do CMake / C++
+build/
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+*.o
+*.a
+*.so
+*.out
+api_cpp
+
+# Logs e dumps
+*.log
+core
+core.*
+
+# IDEs e editores
+.vscode/
+.idea/
+.vs/
+*.swp
+*~
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Dados locais de containers (se você mapear volumes para pastas)
+data/
