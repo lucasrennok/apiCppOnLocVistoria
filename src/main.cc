@@ -46,6 +46,35 @@ int main() {
     next();
   });
 
+  // --- CORS ---
+  // Origem permitida (frontend Angular em desenvolvimento).
+  const std::string corsOrigin = common::env("CORS_ALLOW_ORIGIN", "https://on-loc.victorfjansen.com");
+
+  // Responde aos preflight (OPTIONS) do navegador sem passar pelos filtros/handlers.
+  app().registerPreRoutingAdvice([corsOrigin](const HttpRequestPtr &req,
+                                              AdviceCallback &&callback,
+                                              AdviceChainCallback &&next) {
+    if (req->method() == Options) {
+      auto resp = HttpResponse::newHttpResponse();
+      resp->setStatusCode(k204NoContent);
+      resp->addHeader("Access-Control-Allow-Origin", corsOrigin);
+      resp->addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+      resp->addHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      resp->addHeader("Access-Control-Max-Age", "86400");
+      callback(resp);
+      return;
+    }
+    next();
+  });
+
+  // Garante o header de CORS em todas as respostas (inclusive erros/404).
+  app().registerPreSendingAdvice([corsOrigin](const HttpRequestPtr &,
+                                              const HttpResponsePtr &resp) {
+    if (resp->getHeader("Access-Control-Allow-Origin").empty()) {
+      resp->addHeader("Access-Control-Allow-Origin", corsOrigin);
+    }
+  });
+
   app().createDbClient("mysql", common::env("DB_HOST", "db"),
                        static_cast<uint16_t>(std::stoi(common::env("DB_PORT", "3306"))),
                        common::env("DB_NAME", "appdb"), common::env("DB_USER", "app"),
