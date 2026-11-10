@@ -8,7 +8,6 @@
 namespace testserver {
 namespace {
 
-std::thread g_thread;
 drogon::HttpClientPtr g_client;
 bool g_ready = false;
 
@@ -16,19 +15,20 @@ std::string jsonText(const Json::Value &v) { return common::toJsonText(v); }
 
 }  // namespace
 
-void start(int port) {
+void run(int port) {
   drogon::app().addListener("127.0.0.1", static_cast<uint16_t>(port));
-  g_thread = std::thread([] { drogon::app().run(); });
-  g_client = drogon::HttpClient::newHttpClient("http://127.0.0.1:" + std::to_string(port));
+  drogon::app().run();  // bloqueia até quit()
+}
 
-  // Aguarda o servidor ficar pronto (o /health responde 200 quando o banco está OK).
+void waitReady(int port) {
+  g_client = drogon::HttpClient::newHttpClient("http://127.0.0.1:" + std::to_string(port));
   for (int i = 0; i < 100; ++i) {
     try {
       auto req = drogon::HttpRequest::newHttpRequest();
-      req->setPath("/health");
+      req->setPath("/");
       auto [result, resp] = g_client->sendRequest(req, 0.5);
       if (result == drogon::ReqResult::Ok && resp &&
-          resp->getStatusCode() != drogon::k503ServiceUnavailable) {
+          resp->getStatusCode() == drogon::k200OK) {
         g_ready = true;
         return;
       }
@@ -38,11 +38,8 @@ void start(int port) {
   }
 }
 
-void stop() {
-  if (g_thread.joinable()) {
-    drogon::app().quit();
-    g_thread.join();
-  }
+void shutdown() {
+  g_client.reset();
   g_ready = false;
 }
 
@@ -50,7 +47,7 @@ bool running() { return g_ready; }
 
 drogon::HttpResponsePtr request(drogon::HttpMethod method, const std::string &path,
                                 const std::string &body, const std::string &authHeader) {
-  if (!g_ready) return nullptr;
+  if (!g_ready || !g_client) return nullptr;
 
   auto req = drogon::HttpRequest::newHttpRequest();
   req->setMethod(method);

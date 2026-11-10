@@ -12,25 +12,27 @@
 
 using namespace drogon;
 
+class LoanRepositoryTest : public DbTestBase {};
+
 namespace {
 void deleteLoan(const std::string &id) {
   if (!id.empty()) repo::db()->execSqlSync("DELETE FROM loans WHERE id = ?", id);
 }
 }  // namespace
 
-TEST_F(DbTestBase, ListReturnsSeed) {
+TEST_F(LoanRepositoryTest, ListReturnsSeed) {
   Json::Value arr = drogon::sync_wait(repo::loans::list("", ""));
   ASSERT_TRUE(arr.isArray());
   EXPECT_GE(arr.size(), 2u);
 }
 
-TEST_F(DbTestBase, ListFiltersByClient) {
+TEST_F(LoanRepositoryTest, ListFiltersByClient) {
   Json::Value arr = drogon::sync_wait(repo::loans::list("", "c1"));
   ASSERT_TRUE(arr.isArray());
   for (const auto &l : arr) EXPECT_EQ(l["clientId"].asString(), "c1");
 }
 
-TEST_F(DbTestBase, FindExistingAndMissing) {
+TEST_F(LoanRepositoryTest, FindExistingAndMissing) {
   Json::Value l = drogon::sync_wait(repo::loans::find(repo::db(), "l1"));
   ASSERT_TRUE(l.isObject());
   EXPECT_EQ(l["id"].asString(), "l1");
@@ -41,7 +43,7 @@ TEST_F(DbTestBase, FindExistingAndMissing) {
   EXPECT_TRUE(missing.isNull());
 }
 
-TEST_F(DbTestBase, CreateWithItems) {
+TEST_F(LoanRepositoryTest, CreateWithItems) {
   Json::Value body;
   body["clientId"] = "c1";
   body["organization"] = "Obra de teste";
@@ -62,14 +64,14 @@ TEST_F(DbTestBase, CreateWithItems) {
   deleteLoan(id);
 }
 
-TEST_F(DbTestBase, CreateRejectsUnknownClient) {
+TEST_F(LoanRepositoryTest, CreateRejectsUnknownClient) {
   Json::Value body;
   body["clientId"] = "nao-existe";
   body["organization"] = "Obra";
   EXPECT_THROW(drogon::sync_wait(repo::loans::create(body)), common::ApiError);
 }
 
-TEST_F(DbTestBase, CreateRejectsUnknownAsset) {
+TEST_F(LoanRepositoryTest, CreateRejectsUnknownAsset) {
   Json::Value body;
   body["clientId"] = "c1";
   body["organization"] = "Obra";

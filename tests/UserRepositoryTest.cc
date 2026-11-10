@@ -11,13 +11,15 @@
 
 using namespace drogon;
 
-TEST_F(DbTestBase, ListReturnsSeed) {
+class UserRepositoryTest : public DbTestBase {};
+
+TEST_F(UserRepositoryTest, ListReturnsSeed) {
   Json::Value arr = drogon::sync_wait(repo::users::list());
   ASSERT_TRUE(arr.isArray());
   EXPECT_GE(arr.size(), 2u);
 }
 
-TEST_F(DbTestBase, CreateAndRemove) {
+TEST_F(UserRepositoryTest, CreateAndRemove) {
   Json::Value body;
   body["name"] = "Usuário de Teste";
   body["email"] = "usuario.teste@onloc.com.br";
@@ -34,14 +36,14 @@ TEST_F(DbTestBase, CreateAndRemove) {
   EXPECT_FALSE(drogon::sync_wait(repo::users::remove(id)));
 }
 
-TEST_F(DbTestBase, CreateRejectsInvalidEmail) {
+TEST_F(UserRepositoryTest, CreateRejectsInvalidEmail) {
   Json::Value body;
   body["name"] = "Sem Arroba";
   body["email"] = "email-sem-arroba";
   EXPECT_THROW(drogon::sync_wait(repo::users::create(body)), common::ApiError);
 }
 
-TEST_F(DbTestBase, CreateRejectsShortPassword) {
+TEST_F(UserRepositoryTest, CreateRejectsShortPassword) {
   Json::Value body;
   body["name"] = "Senha Curta";
   body["email"] = "senha.curta@onloc.com.br";
@@ -49,7 +51,7 @@ TEST_F(DbTestBase, CreateRejectsShortPassword) {
   EXPECT_THROW(drogon::sync_wait(repo::users::create(body)), common::ApiError);
 }
 
-TEST_F(DbTestBase, CreateRejectsDuplicateEmail) {
+TEST_F(UserRepositoryTest, CreateRejectsDuplicateEmail) {
   Json::Value body;
   body["name"] = "Duplicado";
   body["email"] = "analista@onloc.com.br";  // e-mail do seed

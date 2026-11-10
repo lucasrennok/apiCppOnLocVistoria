@@ -4,15 +4,16 @@
 
 #include <cstdlib>
 #include <string>
+#include <thread>
 
 #include "common/Config.h"
 #include "common/Db.h"
 #include "support/DbState.h"
 #include "support/TestServer.h"
 
-// main() dos testes de integração. Conecta no MySQL e, se o banco estiver
-// disponível, sobe a aplicação HTTP em uma thread para os testes de
-// controladores. Sem banco, os testes simplesmente são pulados (GTEST_SKIP).
+// main() dos testes de integração. O Drogon exige que app().run() rode na
+// thread principal, então a aplicação sobe na main thread e os testes rodam
+// em uma thread auxiliar. Sem banco, os testes são pulados (GTEST_SKIP).
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
 
@@ -25,27 +26,50 @@ int main(int argc, char **argv) {
   const std::string user = common::env("DB_USER", "root");
   const std::string password = common::env("DB_PASSWORD", "");
 
-  bool dbOk = false;
+  // Registra o client da aplicação. A conexão real só é criada em run().
+  // Usamos UMA conexão no pool: o commit do Drogon é assíncrono (feito no
+  // destrutor do Transaction), e com um pool de 1 conexão a próxima
+  // transação só recebe a conexão após o commit — evitando corrida entre
+  // create/update/remove encadeados nos testes.
+  bool configured = false;
   try {
     drogon::app().createDbClient("mysql", host, port, dbname, user, password,
-                                 4, "", "default", false, "utf8mb4");
-    if (repo::db()) {
-      drogon::sync_wait(repo::db()->execSqlCoro("SELECT 1"));
-      dbOk = true;
-    }
+                                 1, "", "default", false, "utf8mb4");
+    configured = true;
   } catch (...) {
-    dbOk = false;
+    configured = false;
   }
 
-  dbtest::setAvailable(dbOk);
-
-  if (dbOk) {
-    const int apiPort = std::stoi(common::env("TEST_API_PORT", "18080"));
-    testserver::start(apiPort);
+  if (!configured) {
+    return RUN_ALL_TESTS();
   }
 
-  const int rc = RUN_ALL_TESTS();
+  const int apiPort = std::stoi(common::env("TEST_API_PORT", "18080"));
 
-  if (dbOk) testserver::stop();
+  // Os testes rodam em uma thread auxiliar; ao final, chamam quit() para
+  // liberar o loop da aplicação (que roda na thread principal).
+  int rc = 0;
+  std::thread testThread([&]() {
+    testserver::waitReady(apiPort);
+
+    bool dbOk = false;
+    try {
+      if (repo::db()) {
+        repo::db()->execSqlSync("SELECT 1");
+        dbOk = true;
+      }
+    } catch (...) {
+      dbOk = false;
+    }
+    dbtest::setAvailable(dbOk);
+
+    rc = RUN_ALL_TESTS();
+
+    testserver::shutdown();
+    drogon::app().quit();
+  });
+
+  testserver::run(apiPort);  // bloqueia a thread principal até quit()
+  testThread.join();
   return rc;
 }

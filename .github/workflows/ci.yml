@@ -16,6 +16,8 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: appdb
+          MYSQL_USER: app
+          MYSQL_PASSWORD: app
         ports:
           - 3306:3306
         options: >-
@@ -62,8 +64,8 @@ jobs:
           DB_HOST: 127.0.0.1
           DB_PORT: "3306"
           DB_NAME: appdb
-          DB_USER: root
-          DB_PASSWORD: root
+          DB_USER: app
+          DB_PASSWORD: app
           JWT_SECRET: 0123456789abcdef0123456789abcdef
           PBKDF2_ITERATIONS: "1000"
         run: ctest --test-dir build --output-on-failure

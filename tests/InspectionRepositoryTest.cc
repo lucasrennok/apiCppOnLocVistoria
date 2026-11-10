@@ -13,6 +13,8 @@
 
 using namespace drogon;
 
+class InspectionRepositoryTest : public DbTestBase {};
+
 namespace {
 
 struct LoanFixture {
@@ -56,19 +58,19 @@ Json::Value semAvariaBody(const LoanFixture &loan) {
 
 }  // namespace
 
-TEST_F(DbTestBase, ListReturnsSeed) {
+TEST_F(InspectionRepositoryTest, ListReturnsSeed) {
   Json::Value arr = drogon::sync_wait(repo::inspections::list());
   ASSERT_TRUE(arr.isArray());
   EXPECT_GE(arr.size(), 2u);
 }
 
-TEST_F(DbTestBase, ListDamagesReturnsSeed) {
+TEST_F(InspectionRepositoryTest, ListDamagesReturnsSeed) {
   Json::Value arr = drogon::sync_wait(repo::inspections::listDamages());
   ASSERT_TRUE(arr.isArray());
   EXPECT_GE(arr.size(), 1u);
 }
 
-TEST_F(DbTestBase, FindExistingAndMissing) {
+TEST_F(InspectionRepositoryTest, FindExistingAndMissing) {
   Json::Value i = drogon::sync_wait(repo::inspections::find(repo::db(), "i1"));
   ASSERT_TRUE(i.isObject());
   EXPECT_EQ(i["id"].asString(), "i1");
@@ -77,7 +79,7 @@ TEST_F(DbTestBase, FindExistingAndMissing) {
   EXPECT_TRUE(missing.isNull());
 }
 
-TEST_F(DbTestBase, CreateSemAvaria) {
+TEST_F(InspectionRepositoryTest, CreateSemAvaria) {
   LoanFixture loan = makeLoan();
   Json::Value insp = drogon::sync_wait(repo::inspections::create(semAvariaBody(loan), "u1"));
   ASSERT_TRUE(insp.isObject());
@@ -87,7 +89,7 @@ TEST_F(DbTestBase, CreateSemAvaria) {
   cleanup(insp["id"].asString(), loan);
 }
 
-TEST_F(DbTestBase, CreateMauUsoRegistersDamageAndUpdatesLoan) {
+TEST_F(InspectionRepositoryTest, CreateMauUsoRegistersDamageAndUpdatesLoan) {
   LoanFixture loan = makeLoan();
 
   Json::Value body;
@@ -130,14 +132,14 @@ TEST_F(DbTestBase, CreateMauUsoRegistersDamageAndUpdatesLoan) {
   cleanup(insp["id"].asString(), loan);
 }
 
-TEST_F(DbTestBase, CreateRejectsUnknownLoan) {
+TEST_F(InspectionRepositoryTest, CreateRejectsUnknownLoan) {
   Json::Value body;
   body["loanId"] = "nao-existe";
   body["assessment"] = "sem_avaria";
   EXPECT_THROW(drogon::sync_wait(repo::inspections::create(body, "u1")), common::ApiError);
 }
 
-TEST_F(DbTestBase, ReviewApproveAndReject) {
+TEST_F(InspectionRepositoryTest, ReviewApproveAndReject) {
   LoanFixture loan = makeLoan();
 
   Json::Value insp = drogon::sync_wait(repo::inspections::create(semAvariaBody(loan), "u1"));
@@ -153,7 +155,7 @@ TEST_F(DbTestBase, ReviewApproveAndReject) {
   cleanup(id, loan);
 }
 
-TEST_F(DbTestBase, ReviewMissingReturnsNull) {
+TEST_F(InspectionRepositoryTest, ReviewMissingReturnsNull) {
   Json::Value out = drogon::sync_wait(repo::inspections::review("nao-existe", true));
   EXPECT_TRUE(out.isNull());
 }

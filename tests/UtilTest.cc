@@ -94,15 +94,20 @@ TEST(UtilTest, OneOf) {
 }
 
 TEST(UtilTest, BodyObject) {
-  auto req = drogon::HttpRequest::newHttpRequest();
-  req->setBody("{\"a\": 1}");
-  req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
-  Json::Value o = common::bodyObject(req);
+  auto ok = drogon::HttpRequest::newHttpRequest();
+  ok->setBody("{\"a\": 1}");
+  ok->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+  Json::Value o = common::bodyObject(ok);
   EXPECT_EQ(o["a"].asInt(), 1);
 
-  req->setBody("[1, 2]");
-  EXPECT_API_ERROR(common::bodyObject(req), drogon::k400BadRequest);
+  // Cada caso usa um request novo: o Drogon faz cache do JSON parseado.
+  auto arr = drogon::HttpRequest::newHttpRequest();
+  arr->setBody("[1, 2]");
+  arr->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+  EXPECT_API_ERROR(common::bodyObject(arr), drogon::k400BadRequest);
 
-  req->setBody("");
-  EXPECT_API_ERROR(common::bodyObject(req), drogon::k400BadRequest);
+  auto empty = drogon::HttpRequest::newHttpRequest();
+  empty->setBody("");
+  empty->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+  EXPECT_API_ERROR(common::bodyObject(empty), drogon::k400BadRequest);
 }

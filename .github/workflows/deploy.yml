@@ -1,0 +1,35 @@
+name: Deploy para VPS
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Reiniciar o serviço na VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          # Configure em Settings -> Secrets and variables -> Actions:
+          #   VPS_HOST      -> IP/host da VPS
+          #   VPS_USER      -> usuário SSH (padrão: root)
+          #   VPS_PASSWORD  -> senha do SSH
+          #   VPS_PORT      -> porta SSH (padrão: 22)
+          #   VPS_APP_DIR   -> diretório da aplicação na VPS (padrão: ~/app)
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER || 'root' }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT || '22' }}
+
+          # O diretório na VPS precisa conter o repositório clonado e o
+          # arquivo .env (JWT_SECRET, DB_*, S3_* etc.), que não é versionado.
+          script: |
+            set -e
+            cd ${{ secrets.VPS_APP_DIR || '~/app' }}
+            git pull --ff-only
+            docker compose down
+            docker compose up --build -d
+            docker compose ps

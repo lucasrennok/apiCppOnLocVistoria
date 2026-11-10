@@ -11,13 +11,15 @@
 
 using namespace drogon;
 
-TEST_F(DbTestBase, ListReturnsSeed) {
+class ClientRepositoryTest : public DbTestBase {};
+
+TEST_F(ClientRepositoryTest, ListReturnsSeed) {
   Json::Value arr = drogon::sync_wait(repo::clients::list(""));
   ASSERT_TRUE(arr.isArray());
   EXPECT_GE(arr.size(), 2u);
 }
 
-TEST_F(DbTestBase, SearchMatchesTradeNameOrDocument) {
+TEST_F(ClientRepositoryTest, SearchMatchesTradeNameOrDocument) {
   Json::Value arr = drogon::sync_wait(repo::clients::list("alfa"));
   ASSERT_TRUE(arr.isArray());
   EXPECT_GE(arr.size(), 1u);
@@ -27,7 +29,7 @@ TEST_F(DbTestBase, SearchMatchesTradeNameOrDocument) {
   EXPECT_TRUE(found);
 }
 
-TEST_F(DbTestBase, FindExistingAndMissing) {
+TEST_F(ClientRepositoryTest, FindExistingAndMissing) {
   Json::Value c = drogon::sync_wait(repo::clients::find(repo::db(), "c1"));
   ASSERT_TRUE(c.isObject());
   EXPECT_EQ(c["id"].asString(), "c1");
@@ -37,7 +39,7 @@ TEST_F(DbTestBase, FindExistingAndMissing) {
   EXPECT_TRUE(missing.isNull());
 }
 
-TEST_F(DbTestBase, CreateUpdateRemove) {
+TEST_F(ClientRepositoryTest, CreateUpdateRemove) {
   Json::Value body;
   body["responsible"] = "Responsável Teste";
   body["document"] = "11122233344";
@@ -59,7 +61,7 @@ TEST_F(DbTestBase, CreateUpdateRemove) {
   EXPECT_TRUE(drogon::sync_wait(repo::clients::find(repo::db(), id)).isNull());
 }
 
-TEST_F(DbTestBase, CreateRejectsInvalidDocument) {
+TEST_F(ClientRepositoryTest, CreateRejectsInvalidDocument) {
   Json::Value body;
   body["responsible"] = "Responsável";
   body["document"] = "abc";
@@ -69,6 +71,6 @@ TEST_F(DbTestBase, CreateRejectsInvalidDocument) {
   EXPECT_THROW(drogon::sync_wait(repo::clients::create(body)), common::ApiError);
 }
 
-TEST_F(DbTestBase, RemoveMissingReturnsFalse) {
+TEST_F(ClientRepositoryTest, RemoveMissingReturnsFalse) {
   EXPECT_FALSE(drogon::sync_wait(repo::clients::remove("nao-existe")));
 }

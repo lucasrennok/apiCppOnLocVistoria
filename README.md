@@ -49,6 +49,23 @@ Só os testes unitários, sem banco:
 
 A esteira (`.github/workflows/ci.yml`) sobe um MySQL de serviço, carrega o schema e roda as duas suítes.
 
+## Deploy (VPS)
+
+O workflow `.github/workflows/deploy.yml` faz, via SSH na VPS, `git pull` + `docker compose down` +
+`docker compose up --build -d` (reinicie o serviço).
+
+Configure os secrets em **Settings → Secrets and variables → Actions**:
+
+- `VPS_HOST` — IP/host da VPS
+- `VPS_USER` — usuário SSH (padrão: `root`)
+- `VPS_PASSWORD` — senha do SSH
+- `VPS_PORT` — porta SSH (opcional, padrão `22`)
+- `VPS_APP_DIR` — diretório da aplicação na VPS (opcional, padrão `~/app`)
+
+A VPS precisa ter o repositório clonado em `VPS_APP_DIR` e o arquivo `.env` criado
+(não versionado, contém `JWT_SECRET`, `DB_*`, `S3_*` etc.). Por segurança, prefira uma chave
+SSH (`key` no lugar de `password`).
+
 ## Notas
 - IDs novos: prefixo + 16 hex (`c…`, `a…`, `l…`, `li…`, `i…`, `d…`, `u…`, `s…`). Seed mantém `u1`, `c1`…
 - Erros extras além de 401/404: 400 (validação), 409 (conflito: e-mail duplicado, excluir com vínculos), 503 (S3 não configurado).

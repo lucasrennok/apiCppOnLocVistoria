@@ -6,12 +6,14 @@
 
 #include <string>
 
-// Sobe a aplicação em uma thread separada (com listener local) para os testes
-// de controladores e fornece helpers HTTP síncronos.
+// Helpers para os testes de controladores. A aplicação deve ser iniciada com
+// testserver::run() na THREAD PRINCIPAL (o Drogon exige run() na main thread);
+// os testes rodam em outra thread usando waitReady() + os helpers HTTP.
 namespace testserver {
 
-void start(int port);
-void stop();
+void run(int port);
+void waitReady(int port);
+void shutdown();
 bool running();
 
 drogon::HttpResponsePtr request(drogon::HttpMethod method,
