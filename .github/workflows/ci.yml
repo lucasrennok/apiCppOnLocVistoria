@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-22.04
+
+    services:
+      mysql:
+        image: mysql:8.0
+        command: --default-authentication-plugin=mysql_native_password
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: appdb
+          MYSQL_USER: app
+          MYSQL_PASSWORD: app
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot --silent"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            git ca-certificates cmake g++ make pkg-config \
+            libjsoncpp-dev uuid-dev zlib1g-dev libssl-dev \
+            libmariadb-dev libc-ares-dev
+
+      - name: Build and install Drogon
+        run: |
+          git clone --branch v1.9.10 --depth 1 --recurse-submodules --shallow-submodules \
+            https://github.com/drogonframework/drogon.git /tmp/drogon
+          cmake -S /tmp/drogon -B /tmp/drogon/build \
+            -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF
+          cmake --build /tmp/drogon/build -j"$(nproc)"
+          sudo cmake --install /tmp/drogon/build
+
+      - name: Load database schema
+        run: |
+          docker run --rm --network host \
+            -v "$PWD/db/init.sql:/init.sql:ro" \
+            mysql:8.0 sh -c 'mysql -h 127.0.0.1 -uroot -proot appdb < /init.sql'
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
+
+      - name: Build
+        run: cmake --build build -j"$(nproc)"
+
+      - name: Run tests
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: "3306"
+          DB_NAME: appdb
+          DB_USER: app
+          DB_PASSWORD: app
+          JWT_SECRET: 0123456789abcdef0123456789abcdef
+          PBKDF2_ITERATIONS: "1000"
+        run: ctest --test-dir build --output-on-failure
