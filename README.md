@@ -28,6 +28,27 @@ As rotas respondem com ou sem o prefixo `/api` (nginx pode repassar de qualquer 
 - src/auth, src/common/  JWT HS256, PBKDF2, validações, helpers
 - db/init.sql            schema + seed do documento
 
+## Testes
+
+Há duas suítes de testes (GoogleTest):
+
+- `unit_tests` — lógica pura (Crypto, JWT, validações, upload, filtros). Não precisa de banco.
+- `integration_tests` — repositórios e controladores (HTTP). Precisa de um MySQL com o `db/init.sql` carregado;
+  sem banco, os testes são pulados automaticamente (`GTEST_SKIP`).
+
+Para rodar (com MySQL local, por exemplo via `docker compose up -d db` e carregando `db/init.sql`):
+
+    cmake -S . -B build -DBUILD_TESTING=ON
+    cmake --build build -j"$(nproc)"
+    DB_HOST=127.0.0.1 DB_PORT=3306 DB_NAME=appdb DB_USER=root DB_PASSWORD=... \
+      ctest --test-dir build --output-on-failure
+
+Só os testes unitários, sem banco:
+
+    ctest --test-dir build --output-on-failure -R unit_tests
+
+A esteira (`.github/workflows/ci.yml`) sobe um MySQL de serviço, carrega o schema e roda as duas suítes.
+
 ## Notas
 - IDs novos: prefixo + 16 hex (`c…`, `a…`, `l…`, `li…`, `i…`, `d…`, `u…`, `s…`). Seed mantém `u1`, `c1`…
 - Erros extras além de 401/404: 400 (validação), 409 (conflito: e-mail duplicado, excluir com vínculos), 503 (S3 não configurado).
