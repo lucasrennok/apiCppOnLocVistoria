@@ -70,4 +70,6 @@ jobs:
           # binário de teste (tests/unit_main.cc e tests/integration_main.cc),
           # então não precisam ser repetidos aqui. Isso também evita o falso
           # positivo do Semgrep por "segredo hardcoded".
-        run: ctest --test-dir build --output-on-failure
+        # -V mostra a saída do gtest (cada caso de teste, [ SKIPPED ] e o
+        # resumo final), senão o ctest só exibe "Passed" por executável.
+        run: ctest --test-dir build --output-on-failure -V
