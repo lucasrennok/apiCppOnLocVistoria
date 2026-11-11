@@ -66,6 +66,8 @@ jobs:
           DB_NAME: appdb
           DB_USER: app
           DB_PASSWORD: app
-          JWT_SECRET: 0123456789abcdef0123456789abcdef
-          PBKDF2_ITERATIONS: "1000"
+          # JWT_SECRET e PBKDF2_ITERATIONS são definidos no main() de cada
+          # binário de teste (tests/unit_main.cc e tests/integration_main.cc),
+          # então não precisam ser repetidos aqui. Isso também evita o falso
+          # positivo do Semgrep por "segredo hardcoded".
         run: ctest --test-dir build --output-on-failure

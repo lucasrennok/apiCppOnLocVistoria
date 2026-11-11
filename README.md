@@ -49,6 +49,10 @@ Só os testes unitários, sem banco:
 
 A esteira (`.github/workflows/ci.yml`) sobe um MySQL de serviço, carrega o schema e roda as duas suítes.
 
+A análise estática de segurança (SAST) roda no workflow `.github/workflows/semgrep.yml`
+(Semgrep): em PRs, na `main`/`master` e sob demanda. Os resultados aparecem em
+**Security → Code scanning** e a esteira falha se houver descobertas de severidade `ERROR`.
+
 ## Deploy (VPS)
 
 O workflow `.github/workflows/deploy.yml` faz, via SSH na VPS, `git pull` + `docker compose down` +
