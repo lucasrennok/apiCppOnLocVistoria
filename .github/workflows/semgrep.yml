@@ -1,0 +1,63 @@
+name: Semgrep (SAST)
+
+on:
+  pull_request: {}
+  workflow_dispatch: {}
+  push:
+    branches: [main, master]
+  schedule:
+    # Ajuste o horário se preferir (sintaxe cron, em UTC).
+    - cron: '20 17 * * *'
+
+permissions:
+  contents: read
+  # Necessário para publicar os resultados no Code scanning.
+  security-events: write
+
+jobs:
+  semgrep:
+    name: semgrep/sast
+    runs-on: ubuntu-22.04
+
+    container:
+      # Imagem oficial com o Semgrep instalado.
+      image: semgrep/semgrep:latest
+
+    # Dependabot não tem permissão para publicar resultados no Code scanning.
+    if: github.actor != 'dependabot[bot]'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 1) Varredura completa (regras padrão da linguagem + detecção de segredos).
+      #    Gera relatório SARIF. Não bloqueia a esteira: as descobertas vão
+      #    para o Code scanning e o bloqueio fica no passo seguinte.
+      - name: Executar Semgrep (SAST + segredos)
+        id: semgrep
+        continue-on-error: true
+        run: >-
+          semgrep scan
+          --config auto
+          --config p/secrets
+          --sarif
+          --sarif-output=semgrep.sarif
+
+      # 2) Publica o relatório no GitHub Code scanning.
+      - name: Publicar resultados no Code scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep.sarif
+
+      # 3) Gate de segurança: falha a esteira se houver descobertas de
+      #    severidade ERROR. Para apenas reportar sem bloquear o merge,
+      #    remova este passo.
+      - name: Falhar se houver vulnerabilidades de severidade ERROR
+        if: always()
+        run: >-
+          semgrep scan
+          --config auto
+          --config p/secrets
+          --severity ERROR
+          --error
