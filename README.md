@@ -81,3 +81,5 @@ SSH (`key` no lugar de `password`).
 Hoje o acesso a dados usa SQL parametrizado (`?`). Para gerar modelos do ORM:
     docker compose up -d db
     docker compose run --rm --no-deps -v "$PWD/models:/app/models" --entrypoint drogon_ctl api create model /app/models
+
+
