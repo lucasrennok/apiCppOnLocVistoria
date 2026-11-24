@@ -5,6 +5,23 @@ project(api_cpp CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Sanitizers (AddressSanitizer + UndefinedBehaviorSanitizer). Desligado por
+# padrão; ligado no job "sanitizers" da CI. Aplicado globalmente para que a
+# aplicação, os testes e o googletest sejam todos instrumentados.
+option(ENABLE_SANITIZERS "Compilar com -fsanitize=address,undefined" OFF)
+if(ENABLE_SANITIZERS)
+  if(NOT CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    message(FATAL_ERROR "ENABLE_SANITIZERS requer GCC ou Clang")
+  endif()
+  add_compile_options(
+    -fsanitize=address,undefined
+    -fno-sanitize-recover=all
+    -fno-omit-frame-pointer
+    -g
+  )
+  add_link_options(-fsanitize=address,undefined)
+endif()
+
 find_package(Drogon CONFIG REQUIRED)
 find_package(OpenSSL REQUIRED)
 
