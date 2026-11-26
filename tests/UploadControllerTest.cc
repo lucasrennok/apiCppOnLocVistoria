@@ -21,7 +21,7 @@ class UploadControllerTest : public ApiTestBase {
 TEST_F(UploadControllerTest, PresignWithoutStorageReturns503) {
   Json::Value body;
   body["filename"] = "foto.png";
-  auto resp = testserver::post("/uploads/presign", body);
+  auto resp = testserver::post("/uploads/presign", body, testsupport::bearer("Analista"));
   ASSERT_NE(resp, nullptr);
   EXPECT_EQ(resp->getStatusCode(), drogon::k503ServiceUnavailable);
 }
@@ -33,7 +33,7 @@ TEST_F(UploadControllerTest, PresignWithStorageReturnsUrls) {
 
   Json::Value body;
   body["filename"] = "foto.png";
-  auto resp = testserver::post("/uploads/presign", body);
+  auto resp = testserver::post("/uploads/presign", body, testsupport::bearer("Analista"));
   ASSERT_NE(resp, nullptr);
   EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
   Json::Value out = testsupport::parseBody(resp);
@@ -47,7 +47,7 @@ TEST_F(UploadControllerTest, PresignInvalidFilenameReturns400) {
 
   Json::Value body;
   body["filename"] = "///";
-  auto resp = testserver::post("/uploads/presign", body);
+  auto resp = testserver::post("/uploads/presign", body, testsupport::bearer("Analista"));
   ASSERT_NE(resp, nullptr);
   EXPECT_EQ(resp->getStatusCode(), drogon::k400BadRequest);
 }

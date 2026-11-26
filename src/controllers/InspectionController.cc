@@ -11,11 +11,11 @@ using common::ApiError;
 class InspectionController : public HttpController<InspectionController> {
  public:
   METHOD_LIST_BEGIN
-  ADD_METHOD_TO(InspectionController::list, "/inspections", Get);
-  ADD_METHOD_TO(InspectionController::create, "/inspections", Post);
+  ADD_METHOD_TO(InspectionController::list, "/inspections", Get, "AuthFilter");
+  ADD_METHOD_TO(InspectionController::create, "/inspections", Post, "AuthFilter");
   ADD_METHOD_TO(InspectionController::approve, "/inspections/{1}/approve", Patch, "GestorFilter");
   ADD_METHOD_TO(InspectionController::reject, "/inspections/{1}/reject", Patch, "GestorFilter");
-  ADD_METHOD_TO(InspectionController::damages, "/damages", Get);
+  ADD_METHOD_TO(InspectionController::damages, "/damages", Get, "AuthFilter");
   METHOD_LIST_END
 
   Task<HttpResponsePtr> list(HttpRequestPtr) {

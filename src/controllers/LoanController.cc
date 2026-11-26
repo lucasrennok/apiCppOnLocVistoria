@@ -11,9 +11,9 @@ using common::ApiError;
 class LoanController : public HttpController<LoanController> {
  public:
   METHOD_LIST_BEGIN
-  ADD_METHOD_TO(LoanController::list, "/loans", Get);
-  ADD_METHOD_TO(LoanController::getOne, "/loans/{1}", Get);
-  ADD_METHOD_TO(LoanController::create, "/loans", Post);
+  ADD_METHOD_TO(LoanController::list, "/loans", Get, "AuthFilter");
+  ADD_METHOD_TO(LoanController::getOne, "/loans/{1}", Get, "AuthFilter");
+  ADD_METHOD_TO(LoanController::create, "/loans", Post, "AuthFilter");
   METHOD_LIST_END
 
   Task<HttpResponsePtr> list(HttpRequestPtr req) {

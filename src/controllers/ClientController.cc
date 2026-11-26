@@ -12,12 +12,12 @@ using common::ApiError;
 class ClientController : public HttpController<ClientController> {
  public:
   METHOD_LIST_BEGIN
-  ADD_METHOD_TO(ClientController::list, "/clients", Get);
-  ADD_METHOD_TO(ClientController::getOne, "/clients/{1}", Get);
-  ADD_METHOD_TO(ClientController::create, "/clients", Post);
-  ADD_METHOD_TO(ClientController::update, "/clients/{1}", Put);
-  ADD_METHOD_TO(ClientController::remove, "/clients/{1}", Delete);
-  ADD_METHOD_TO(ClientController::loans, "/clients/{1}/loans", Get);
+  ADD_METHOD_TO(ClientController::list, "/clients", Get, "AuthFilter");
+  ADD_METHOD_TO(ClientController::getOne, "/clients/{1}", Get, "AuthFilter");
+  ADD_METHOD_TO(ClientController::create, "/clients", Post, "AuthFilter");
+  ADD_METHOD_TO(ClientController::update, "/clients/{1}", Put, "AuthFilter");
+  ADD_METHOD_TO(ClientController::remove, "/clients/{1}", Delete, "AuthFilter");
+  ADD_METHOD_TO(ClientController::loans, "/clients/{1}/loans", Get, "AuthFilter");
   METHOD_LIST_END
 
   Task<HttpResponsePtr> list(HttpRequestPtr req) {

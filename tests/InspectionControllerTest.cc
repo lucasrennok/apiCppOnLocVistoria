@@ -45,14 +45,14 @@ void cleanup(const std::string &inspectionId, const LoanFixture &loan) {
 }  // namespace
 
 TEST_F(ApiTestBase, ListInspections) {
-  auto resp = testserver::get("/inspections");
+  auto resp = testserver::get("/inspections", testsupport::bearer("Analista"));
   ASSERT_NE(resp, nullptr);
   EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
   EXPECT_TRUE(testsupport::parseBody(resp).isArray());
 }
 
 TEST_F(ApiTestBase, ListDamages) {
-  auto resp = testserver::get("/damages");
+  auto resp = testserver::get("/damages", testsupport::bearer("Analista"));
   ASSERT_NE(resp, nullptr);
   EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
   EXPECT_TRUE(testsupport::parseBody(resp).isArray());
@@ -64,7 +64,7 @@ TEST_F(ApiTestBase, CreateInspection) {
   body["loanId"] = loan.id;
   body["assessment"] = "sem_avaria";
 
-  auto resp = testserver::post("/inspections", body);
+  auto resp = testserver::post("/inspections", body, testsupport::bearer("Analista"));
   ASSERT_NE(resp, nullptr);
   EXPECT_EQ(resp->getStatusCode(), drogon::k201Created);
   const std::string id = testsupport::parseBody(resp)["id"].asString();
@@ -78,7 +78,7 @@ TEST_F(ApiTestBase, ApproveRequiresGestorRole) {
   Json::Value body;
   body["loanId"] = loan.id;
   body["assessment"] = "sem_avaria";
-  auto created = testserver::post("/inspections", body);
+  auto created = testserver::post("/inspections", body, testsupport::bearer("Analista"));
   const std::string id = testsupport::parseBody(created)["id"].asString();
   const std::string path = "/inspections/" + id + "/approve";
 
@@ -105,7 +105,7 @@ TEST_F(ApiTestBase, RejectRequiresGestorRole) {
   Json::Value body;
   body["loanId"] = loan.id;
   body["assessment"] = "sem_avaria";
-  auto created = testserver::post("/inspections", body);
+  auto created = testserver::post("/inspections", body, testsupport::bearer("Analista"));
   const std::string id = testsupport::parseBody(created)["id"].asString();
   const std::string path = "/inspections/" + id + "/reject";
 

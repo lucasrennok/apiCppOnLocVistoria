@@ -8,7 +8,7 @@
 using namespace drogon;
 
 TEST_F(ApiTestBase, ListAssets) {
-  auto resp = testserver::get("/assets");
+  auto resp = testserver::get("/assets", testsupport::bearer("Analista"));
   ASSERT_NE(resp, nullptr);
   EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
   Json::Value body = testsupport::parseBody(resp);
@@ -17,14 +17,14 @@ TEST_F(ApiTestBase, ListAssets) {
 }
 
 TEST_F(ApiTestBase, GetAssetById) {
-  auto resp = testserver::get("/assets/a1");
+  auto resp = testserver::get("/assets/a1", testsupport::bearer("Analista"));
   ASSERT_NE(resp, nullptr);
   EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
   EXPECT_EQ(testsupport::parseBody(resp)["id"].asString(), "a1");
 }
 
 TEST_F(ApiTestBase, GetMissingAssetReturns404) {
-  auto resp = testserver::get("/assets/nao-existe");
+  auto resp = testserver::get("/assets/nao-existe", testsupport::bearer("Analista"));
   ASSERT_NE(resp, nullptr);
   EXPECT_EQ(resp->getStatusCode(), drogon::k404NotFound);
 }
@@ -35,12 +35,12 @@ TEST_F(ApiTestBase, CreateAndRemoveAsset) {
   body["serialNumber"] = "SN-HTTP";
   body["description"] = "Equipamento via HTTP";
 
-  auto created = testserver::post("/assets", body);
+  auto created = testserver::post("/assets", body, testsupport::bearer("Analista"));
   ASSERT_NE(created, nullptr);
   EXPECT_EQ(created->getStatusCode(), drogon::k201Created);
   const std::string id = testsupport::parseBody(created)["id"].asString();
 
-  auto removed = testserver::del("/assets/" + id);
+  auto removed = testserver::del("/assets/" + id, testsupport::bearer("Analista"));
   ASSERT_NE(removed, nullptr);
   EXPECT_EQ(removed->getStatusCode(), drogon::k200OK);
   EXPECT_TRUE(testsupport::parseBody(removed)["ok"].asBool());
@@ -49,7 +49,7 @@ TEST_F(ApiTestBase, CreateAndRemoveAsset) {
 TEST_F(ApiTestBase, CreateAssetValidatesBody) {
   Json::Value body;
   body["description"] = "sem patrimonyNumber";
-  auto resp = testserver::post("/assets", body);
+  auto resp = testserver::post("/assets", body, testsupport::bearer("Analista"));
   ASSERT_NE(resp, nullptr);
   EXPECT_EQ(resp->getStatusCode(), drogon::k400BadRequest);
 }

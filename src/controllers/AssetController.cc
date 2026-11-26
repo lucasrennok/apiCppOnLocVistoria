@@ -11,11 +11,11 @@ using common::ApiError;
 class AssetController : public HttpController<AssetController> {
  public:
   METHOD_LIST_BEGIN
-  ADD_METHOD_TO(AssetController::list, "/assets", Get);
-  ADD_METHOD_TO(AssetController::getOne, "/assets/{1}", Get);
-  ADD_METHOD_TO(AssetController::create, "/assets", Post);
-  ADD_METHOD_TO(AssetController::update, "/assets/{1}", Put);
-  ADD_METHOD_TO(AssetController::remove, "/assets/{1}", Delete);
+  ADD_METHOD_TO(AssetController::list, "/assets", Get, "AuthFilter");
+  ADD_METHOD_TO(AssetController::getOne, "/assets/{1}", Get, "AuthFilter");
+  ADD_METHOD_TO(AssetController::create, "/assets", Post, "AuthFilter");
+  ADD_METHOD_TO(AssetController::update, "/assets/{1}", Put, "AuthFilter");
+  ADD_METHOD_TO(AssetController::remove, "/assets/{1}", Delete, "AuthFilter");
   METHOD_LIST_END
 
   Task<HttpResponsePtr> list(HttpRequestPtr req) {

@@ -16,7 +16,7 @@ void deleteLoan(const std::string &id) {
 }  // namespace
 
 TEST_F(ApiTestBase, ListLoans) {
-  auto resp = testserver::get("/loans");
+  auto resp = testserver::get("/loans", testsupport::bearer("Analista"));
   ASSERT_NE(resp, nullptr);
   EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
   Json::Value body = testsupport::parseBody(resp);
@@ -25,7 +25,7 @@ TEST_F(ApiTestBase, ListLoans) {
 }
 
 TEST_F(ApiTestBase, GetLoanById) {
-  auto resp = testserver::get("/loans/l1");
+  auto resp = testserver::get("/loans/l1", testsupport::bearer("Analista"));
   ASSERT_NE(resp, nullptr);
   EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
   Json::Value body = testsupport::parseBody(resp);
@@ -34,7 +34,7 @@ TEST_F(ApiTestBase, GetLoanById) {
 }
 
 TEST_F(ApiTestBase, GetMissingLoanReturns404) {
-  auto resp = testserver::get("/loans/nao-existe");
+  auto resp = testserver::get("/loans/nao-existe", testsupport::bearer("Analista"));
   ASSERT_NE(resp, nullptr);
   EXPECT_EQ(resp->getStatusCode(), drogon::k404NotFound);
 }
@@ -50,7 +50,7 @@ TEST_F(ApiTestBase, CreateLoanWithItems) {
   items.append(it);
   body["items"] = items;
 
-  auto resp = testserver::post("/loans", body);
+  auto resp = testserver::post("/loans", body, testsupport::bearer("Analista"));
   ASSERT_NE(resp, nullptr);
   EXPECT_EQ(resp->getStatusCode(), drogon::k201Created);
   const std::string id = testsupport::parseBody(resp)["id"].asString();
@@ -63,7 +63,7 @@ TEST_F(ApiTestBase, CreateLoanValidatesClient) {
   Json::Value body;
   body["clientId"] = "nao-existe";
   body["organization"] = "Obra";
-  auto resp = testserver::post("/loans", body);
+  auto resp = testserver::post("/loans", body, testsupport::bearer("Analista"));
   ASSERT_NE(resp, nullptr);
   EXPECT_EQ(resp->getStatusCode(), drogon::k400BadRequest);
 }

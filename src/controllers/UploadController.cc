@@ -9,7 +9,7 @@ using namespace drogon;
 class UploadController : public HttpController<UploadController> {
  public:
   METHOD_LIST_BEGIN
-  ADD_METHOD_TO(UploadController::presign, "/uploads/presign", Post);
+  ADD_METHOD_TO(UploadController::presign, "/uploads/presign", Post, "AuthFilter");
   METHOD_LIST_END
 
   void presign(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) {
